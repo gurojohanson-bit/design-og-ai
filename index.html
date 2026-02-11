@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lightweight To‑Do List</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="app-header">
+        <h1>To‑Do</h1>
+        <p class="app-subtitle">A tiny, local, no-backend task list.</p>
+      </section>
+
+      <section class="task-input">
+        <form id="task-form" autocomplete="off">
+          <input
+            id="task-input"
+            type="text"
+            name="task"
+            placeholder="What do you need to do?"
+            aria-label="New task"
+            required
+          />
+          <input
+            id="task-tags-input"
+            type="text"
+            name="tags"
+            placeholder="tags (comma separated)"
+            aria-label="Tags for task"
+          />
+          <button type="submit">Add</button>
+        </form>
+      </section>
+
+      <section class="task-list-container">
+        <header class="task-list-header">
+          <span id="task-count">0 tasks</span>
+          <div class="task-header-actions">
+            <label for="sort-select" class="sort-label">Sort</label>
+            <select id="sort-select" aria-label="Sort tasks">
+              <option value="createdAt">Created time</option>
+              <option value="tag">Tag (A–Z)</option>
+            </select>
+            <button id="clear-completed" class="link-button" type="button">
+              Clear completed
+            </button>
+          </div>
+        </header>
+        <ul id="task-list" class="task-list" aria-label="To‑do list"></ul>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
+
