@@ -38,15 +38,19 @@
         <header class="task-list-header">
           <span id="task-count">0 tasks</span>
           <div class="task-header-actions">
-            <label for="sort-select" class="sort-label">Sort</label>
-            <select id="sort-select" aria-label="Sort tasks">
-              <option value="createdAt">Created time</option>
-              <option value="tag">Tag (A–Z)</option>
+            <label for="sort-select" class="sort-label">Sorter</label>
+            <select id="sort-select" aria-label="Sorter oppgaver">
+              <option value="createdAtDesc">Nyeste først</option>
+              <option value="createdAtAsc">Eldste først</option>
+              <option value="incompleteFirst">Uferdige først</option>
+              <option value="completedFirst">Ferdige først</option>
+              <option value="tag">Tagg (A–Å)</option>
             </select>
             <button id="clear-completed" class="link-button" type="button">
-              Clear completed
+              Fjern ferdige
             </button>
           </div>
+          <div id="tag-filter-menu" class="tag-filter-menu"></div>
           <div
             id="tag-filter-status"
             class="tag-filter-status hidden"

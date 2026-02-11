@@ -3,6 +3,7 @@
 // - Features: add, remove, mark done, clear completed
 
 const STORAGE_KEY = "light_todo_tasks_v1";
+const SORT_STORAGE_KEY = "light_todo_sort_v1";
 
 /**
  * @typedef {{ id: string, title: string, completed: boolean, createdAt: number, tags: string[] }} Task
@@ -22,12 +23,13 @@ const elements = {
   count: document.getElementById("task-count"),
   clearCompleted: document.getElementById("clear-completed"),
   sortSelect: document.getElementById("sort-select"),
+  tagFilterMenu: document.getElementById("tag-filter-menu"),
   tagFilterStatus: document.getElementById("tag-filter-status"),
   tagFilterName: document.getElementById("tag-filter-name"),
   clearTagFilter: document.getElementById("clear-tag-filter"),
 };
 
-let sortMode = "createdAt";
+let sortMode = "createdAtDesc";
 let activeTagFilter = null; // lowercased tag used for filtering
 let activeTagLabel = ""; // original label for display
 
@@ -51,6 +53,77 @@ function setActiveTagFilter(tagLabel) {
   }
 
   renderTasks();
+}
+
+function getAllUniqueTags() {
+  const tagsSet = new Set();
+  for (const task of tasks) {
+    if (Array.isArray(task.tags)) {
+      for (const tag of task.tags) {
+        const trimmed = String(tag).trim();
+        if (trimmed) {
+          tagsSet.add(trimmed);
+        }
+      }
+    }
+  }
+  return Array.from(tagsSet).sort((a, b) =>
+    a.toLowerCase().localeCompare(b.toLowerCase())
+  );
+}
+
+function renderTagFilterMenu() {
+  if (!elements.tagFilterMenu) return;
+
+  const container = elements.tagFilterMenu;
+  container.innerHTML = "";
+
+  const tags = getAllUniqueTags();
+
+  if (tags.length === 0) {
+    container.classList.add("hidden");
+    return;
+  }
+
+  container.classList.remove("hidden");
+
+  const label = document.createElement("span");
+  label.className = "tag-filter-menu-label";
+  label.textContent = "Filtrer på tagg:";
+  container.appendChild(label);
+
+  const allButton = document.createElement("button");
+  allButton.type = "button";
+  allButton.className = "tag-filter-menu-pill";
+  if (!activeTagFilter) {
+    allButton.classList.add("is-active");
+  }
+  allButton.textContent = "Alle";
+  allButton.addEventListener("click", () => {
+    setActiveTagFilter(null);
+  });
+  container.appendChild(allButton);
+
+  for (const tag of tags) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "tag-filter-menu-pill";
+
+    if (activeTagFilter && activeTagFilter === String(tag).toLowerCase()) {
+      button.classList.add("is-active");
+    }
+
+    button.textContent = tag;
+    button.addEventListener("click", () => {
+      if (activeTagFilter && activeTagFilter === String(tag).toLowerCase()) {
+        setActiveTagFilter(null);
+      } else {
+        setActiveTagFilter(tag);
+      }
+    });
+
+    container.appendChild(button);
+  }
 }
 
 function loadTasks() {
@@ -172,6 +245,9 @@ function createTaskElement(task) {
 function renderTasks() {
   elements.list.innerHTML = "";
 
+  // Update the visible tag filter menu based on all tasks
+  renderTagFilterMenu();
+
   const visibleTasks =
     activeTagFilter == null
       ? tasks
@@ -186,8 +262,8 @@ function renderTasks() {
     empty.className = "empty-state";
     const message =
       activeTagFilter && activeTagLabel
-        ? `No tasks with tag “${activeTagLabel}”. Clear the tag filter to see all tasks.`
-        : "Nothing here yet. Add your first task above.";
+        ? `Ingen oppgaver med taggen «${activeTagLabel}». Fjern tagg‑filteret for å se alle.`
+        : "Ingen oppgaver ennå. Legg til din første oppgave over.";
     empty.innerHTML = `
       <div class="empty-state-icon">☕️</div>
       <div>${message}</div>
@@ -196,24 +272,44 @@ function renderTasks() {
   } else {
     const fragment = document.createDocumentFragment();
     const sorted = [...visibleTasks].sort((a, b) => {
-      if (sortMode === "tag") {
-        const aTag = (a.tags && a.tags[0] ? a.tags[0] : "").toLowerCase();
-        const bTag = (b.tags && b.tags[0] ? b.tags[0] : "").toLowerCase();
+      switch (sortMode) {
+        case "tag": {
+          const aTag = (a.tags && a.tags[0] ? a.tags[0] : "").toLowerCase();
+          const bTag = (b.tags && b.tags[0] ? b.tags[0] : "").toLowerCase();
 
-        // If both have no tag, fall back to createdAt
-        if (!aTag && !bTag) {
+          // If both have no tag, fall back to createdAt
+          if (!aTag && !bTag) {
+            return a.createdAt - b.createdAt;
+          }
+          // Tasks without tags go last
+          if (!aTag) return 1;
+          if (!bTag) return -1;
+
+          const tagCompare = aTag.localeCompare(bTag);
+          return tagCompare !== 0 ? tagCompare : a.createdAt - b.createdAt;
+        }
+        case "createdAtDesc":
+          // Newest first
+          return b.createdAt - a.createdAt;
+        case "incompleteFirst": {
+          // Uncompleted tasks first
+          if (a.completed !== b.completed) {
+            return a.completed - b.completed;
+          }
           return a.createdAt - b.createdAt;
         }
-        // Tasks without tags go last
-        if (!aTag) return 1;
-        if (!bTag) return -1;
-
-        const tagCompare = aTag.localeCompare(bTag);
-        return tagCompare !== 0 ? tagCompare : a.createdAt - b.createdAt;
+        case "completedFirst": {
+          // Completed tasks first
+          if (a.completed !== b.completed) {
+            return b.completed - a.completed;
+          }
+          return a.createdAt - b.createdAt;
+        }
+        case "createdAtAsc":
+        default:
+          // Oldest first
+          return a.createdAt - b.createdAt;
       }
-
-      // Default sort: by creation time (oldest first)
-      return a.createdAt - b.createdAt;
     });
     for (const task of sorted) {
       fragment.appendChild(createTaskElement(task));
@@ -247,6 +343,24 @@ function addTask(title, tagsInput) {
   tasks.push(newTask);
   saveTasks();
   renderTasks();
+}
+
+function loadSortMode() {
+  try {
+    const raw = window.localStorage.getItem(SORT_STORAGE_KEY);
+    if (!raw) return;
+    sortMode = raw;
+  } catch {
+    // ignore sort loading errors
+  }
+}
+
+function saveSortMode() {
+  try {
+    window.localStorage.setItem(SORT_STORAGE_KEY, sortMode);
+  } catch {
+    // ignore sort saving errors
+  }
 }
 
 function removeTask(id) {
@@ -283,15 +397,39 @@ function handleFormSubmit(event) {
 
 function init() {
   loadTasks();
+  loadSortMode();
   renderTasks();
 
   elements.form.addEventListener("submit", handleFormSubmit);
   elements.clearCompleted.addEventListener("click", clearCompletedTasks);
 
   if (elements.sortSelect) {
+    const allowedSortModes = new Set([
+      "createdAtDesc",
+      "createdAtAsc",
+      "incompleteFirst",
+      "completedFirst",
+      "tag",
+    ]);
+    if (!allowedSortModes.has(sortMode)) {
+      sortMode = "createdAtDesc";
+    }
+    elements.sortSelect.value = sortMode;
+
     elements.sortSelect.addEventListener("change", (event) => {
       const value = event.target.value;
-      sortMode = value === "tag" ? "tag" : "createdAt";
+      if (
+        value === "createdAtDesc" ||
+        value === "createdAtAsc" ||
+        value === "incompleteFirst" ||
+        value === "completedFirst" ||
+        value === "tag"
+      ) {
+        sortMode = value;
+      } else {
+        sortMode = "createdAtDesc";
+      }
+      saveSortMode();
       renderTasks();
     });
   }
