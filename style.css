@@ -193,6 +193,30 @@ button {
   gap: 10px;
 }
 
+.tag-filter-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--text-soft);
+}
+
+.tag-filter-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tag-filter-tag {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(251, 146, 210, 0.2);
+  border: 1px solid rgba(251, 207, 232, 0.6);
+  font-size: 0.7rem;
+  color: rgba(254, 242, 242, 0.96);
+}
+
 .sort-label {
   font-size: 0.76rem;
   color: var(--text-soft);
@@ -352,6 +376,22 @@ button {
   border: 1px solid rgba(251, 207, 232, 0.5);
   font-size: 0.7rem;
   color: rgba(254, 242, 242, 0.96);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast),
+    transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.task-tag-pill:hover {
+  background: rgba(251, 146, 210, 0.26);
+  border-color: rgba(251, 207, 232, 0.9);
+  box-shadow: 0 0 10px rgba(251, 146, 210, 0.6);
+  transform: translateY(-0.5px);
+}
+
+.task-tag-pill.is-active {
+  background: rgba(251, 146, 210, 0.32);
+  border-color: rgba(251, 207, 232, 1);
+  box-shadow: 0 0 14px rgba(251, 146, 210, 0.9);
 }
 
 .task-remove {

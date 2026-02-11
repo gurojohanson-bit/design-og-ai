@@ -22,9 +22,36 @@ const elements = {
   count: document.getElementById("task-count"),
   clearCompleted: document.getElementById("clear-completed"),
   sortSelect: document.getElementById("sort-select"),
+  tagFilterStatus: document.getElementById("tag-filter-status"),
+  tagFilterName: document.getElementById("tag-filter-name"),
+  clearTagFilter: document.getElementById("clear-tag-filter"),
 };
 
 let sortMode = "createdAt";
+let activeTagFilter = null; // lowercased tag used for filtering
+let activeTagLabel = ""; // original label for display
+
+function setActiveTagFilter(tagLabel) {
+  if (tagLabel == null || tagLabel === "") {
+    activeTagFilter = null;
+    activeTagLabel = "";
+  } else {
+    activeTagFilter = String(tagLabel).toLowerCase();
+    activeTagLabel = String(tagLabel);
+  }
+
+  if (elements.tagFilterStatus && elements.tagFilterName) {
+    if (activeTagFilter) {
+      elements.tagFilterStatus.classList.remove("hidden");
+      elements.tagFilterName.textContent = activeTagLabel;
+    } else {
+      elements.tagFilterStatus.classList.add("hidden");
+      elements.tagFilterName.textContent = "";
+    }
+  }
+
+  renderTasks();
+}
 
 function loadTasks() {
   try {
@@ -100,6 +127,14 @@ function createTaskElement(task) {
       const tagEl = document.createElement("span");
       tagEl.className = "task-tag-pill";
       tagEl.textContent = tag;
+      tagEl.addEventListener("click", () => {
+        // Toggle filter if clicking the same tag again
+        if (activeTagFilter && activeTagFilter === String(tag).toLowerCase()) {
+          setActiveTagFilter(null);
+        } else {
+          setActiveTagFilter(tag);
+        }
+      });
       tagsEl.appendChild(tagEl);
     }
   } else {
@@ -137,17 +172,30 @@ function createTaskElement(task) {
 function renderTasks() {
   elements.list.innerHTML = "";
 
-  if (tasks.length === 0) {
+  const visibleTasks =
+    activeTagFilter == null
+      ? tasks
+      : tasks.filter(
+          (t) =>
+            Array.isArray(t.tags) &&
+            t.tags.some((tag) => String(tag).toLowerCase() === activeTagFilter)
+        );
+
+  if (visibleTasks.length === 0) {
     const empty = document.createElement("div");
     empty.className = "empty-state";
+    const message =
+      activeTagFilter && activeTagLabel
+        ? `No tasks with tag “${activeTagLabel}”. Clear the tag filter to see all tasks.`
+        : "Nothing here yet. Add your first task above.";
     empty.innerHTML = `
       <div class="empty-state-icon">☕️</div>
-      <div>Nothing here yet. Add your first task above.</div>
+      <div>${message}</div>
     `;
     elements.list.appendChild(empty);
   } else {
     const fragment = document.createDocumentFragment();
-    const sorted = [...tasks].sort((a, b) => {
+    const sorted = [...visibleTasks].sort((a, b) => {
       if (sortMode === "tag") {
         const aTag = (a.tags && a.tags[0] ? a.tags[0] : "").toLowerCase();
         const bTag = (b.tags && b.tags[0] ? b.tags[0] : "").toLowerCase();
@@ -245,6 +293,12 @@ function init() {
       const value = event.target.value;
       sortMode = value === "tag" ? "tag" : "createdAt";
       renderTasks();
+    });
+  }
+
+  if (elements.clearTagFilter) {
+    elements.clearTagFilter.addEventListener("click", () => {
+      setActiveTagFilter(null);
     });
   }
 
