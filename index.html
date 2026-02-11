@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nb">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lightweight To‑Do List</title>
+    <title>Lettvekts gjøremålsliste</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <main class="app">
       <section class="app-header">
-        <h1>To‑Do</h1>
-        <p class="app-subtitle">A tiny, local, no-backend task list.</p>
+        <h1>Todo</h1>
+        <p class="app-subtitle">En perfekt liten gjøremålsliste</p>
       </section>
 
       <section class="task-input">
@@ -19,24 +19,24 @@
             id="task-input"
             type="text"
             name="task"
-            placeholder="What do you need to do?"
-            aria-label="New task"
+            placeholder="Hva trenger du å gjøre?"
+            aria-label="Ny oppgave"
             required
           />
           <input
             id="task-tags-input"
             type="text"
             name="tags"
-            placeholder="tags (comma separated)"
-            aria-label="Tags for task"
+            placeholder="tagger (komma-separert)"
+            aria-label="Tagger for oppgave"
           />
-          <button type="submit">Add</button>
+          <button type="submit">Legg til</button>
         </form>
       </section>
 
       <section class="task-list-container">
         <header class="task-list-header">
-          <span id="task-count">0 tasks</span>
+          <span id="task-count">0 oppgaver</span>
           <div class="task-header-actions">
             <label for="sort-select" class="sort-label">Sorter</label>
             <select id="sort-select" aria-label="Sorter oppgaver">
@@ -57,7 +57,7 @@
             aria-live="polite"
           >
             <span class="tag-filter-label">
-              Filtering by tag:
+              Filtrerer på tagg:
               <span id="tag-filter-name" class="tag-filter-tag"></span>
             </span>
             <button
@@ -65,11 +65,11 @@
               class="link-button"
               type="button"
             >
-              Clear tag filter
+              Fjern taggfilter
             </button>
           </div>
         </header>
-        <ul id="task-list" class="task-list" aria-label="To‑do list"></ul>
+        <ul id="task-list" class="task-list" aria-label="Gjøremålsliste"></ul>
       </section>
     </main>
 
